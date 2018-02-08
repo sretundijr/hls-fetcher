@@ -11,7 +11,7 @@ var DEFAULT_CONCURRENCY = 5;
 var duplicateFileCount = 0;
 var DEFAULT_TIMEOUT = 180000;
 
-function getCWDName (parentUri, localUri) {
+function getCWDName(parentUri, localUri) {
   // Do I need to use node's URL object?
   var parentPaths = path.dirname(parentUri).split('/');
   var localPaths = path.dirname(localUri).split('/');
@@ -33,7 +33,7 @@ function getCWDName (parentUri, localUri) {
   return localPaths.slice(i + 1).join('_');
 }
 
-function createManifestText (manifest, rootUri) {
+function createManifestText(manifest, rootUri) {
   return manifest.map(function (line) {
     if (line.type === 'playlist') {
       var subCWD = getCWDName(rootUri, line.line);
@@ -45,14 +45,14 @@ function createManifestText (manifest, rootUri) {
   }).join('\n');
 }
 
-function getIt (options, done) {
+function getIt(options, done) {
   var uri = options.uri;
   var cwd = options.cwd;
   var concurrency = options.concurrency || DEFAULT_CONCURRENCY;
   var playlistFilename = path.basename(uri);
 
   // Fetch playlist
-  fetch.fetchUrl(uri, {timeout: DEFAULT_TIMEOUT}, function getPlaylist (err, meta, body) {
+  fetch.fetchUrl(uri, { timeout: DEFAULT_TIMEOUT }, function getPlaylist(err, meta, body) {
     if (err) {
       console.error('Error fetching url:', uri);
       return done(err);
@@ -67,7 +67,7 @@ function getIt (options, done) {
       playlistFilename = playlistFilename.substring(0, playlistFilename.length - 1);
     }
     if (!playlistFilename.match(/.+m3u8$/i)) {
-      playlistFilename = "playlist" +  ".m3u8";
+      playlistFilename = "playlist" + ".m3u8";
     }
 
     fs.writeFileSync(path.resolve(cwd, playlistFilename), createManifestText(manifest, uri));
@@ -80,7 +80,7 @@ function getIt (options, done) {
     });
 
     async.series([
-      function fetchSegments (next) {
+      function fetchSegments(next) {
         async.eachLimit(segments, concurrency, function (resource, done) {
           var filename = path.basename(resource.line);
           if (resource.encrypted) {
@@ -90,7 +90,7 @@ function getIt (options, done) {
           }
         }, next);
       },
-      function fetchPlaylists (next) {
+      function fetchPlaylists(next) {
         async.eachSeries(playlists, function (resource, done) {
           // Create subCWD from URI
           var subCWD = getCWDName(uri, resource.line);
@@ -108,7 +108,7 @@ function getIt (options, done) {
               cwd: subDir,
               uri: resource.line,
               concurrency: concurrency
-              },
+            },
               done);
           });
         }, next);
@@ -117,7 +117,7 @@ function getIt (options, done) {
   });
 }
 
-function streamToDisk (resource, filename, cwd, done) {
+function streamToDisk(resource, filename, cwd, done) {
   console.log('Streaming', resource.line, 'to disk.');
   // Fetch it to CWD (streaming)
   var segmentStream = new fetch.FetchStream(resource.line);
@@ -150,9 +150,9 @@ function streamToDisk (resource, filename, cwd, done) {
   });
 }
 
-function fetchAndDecryptedSegment (resource, filename, cwd, done) {
+function fetchAndDecryptedSegment(resource, filename, cwd, done) {
   // Fetch the key
-  fetch.fetchUrl(resource.keyURI, {timeout: DEFAULT_TIMEOUT}, function (err, meta, keyBody) {
+  fetch.fetchUrl(resource.keyURI, { timeout: DEFAULT_TIMEOUT }, function (err, meta, keyBody) {
     if (err) {
       return done(err);
     }
@@ -167,7 +167,7 @@ function fetchAndDecryptedSegment (resource, filename, cwd, done) {
     console.log('Decrypting', resource.line, 'with key', keyBody, 'and IV', [resource.IV[0], resource.IV[1], resource.IV[2], resource.IV[3]]);
 
     // Fetch segment data
-    fetch.fetchUrl(resource.line, {timeout: DEFAULT_TIMEOUT},function (err, meta, segmentBody) {
+    fetch.fetchUrl(resource.line, { timeout: DEFAULT_TIMEOUT }, function (err, meta, segmentBody) {
       if (err) {
         return done(err);
       }
@@ -182,7 +182,7 @@ function fetchAndDecryptedSegment (resource, filename, cwd, done) {
           filename = filename.match(/^.+\..+\?/)[0];
           filename = filename.substring(0, filename.length - 1);
         }
-        if(fs.existsSync(path.resolve(cwd, filename))) {
+        if (fs.existsSync(path.resolve(cwd, filename))) {
           filename = filename.split('.')[0] + duplicateFileCount + '.' + filename.split('.')[1];
           duplicateFileCount += 1;
         }
@@ -192,4 +192,4 @@ function fetchAndDecryptedSegment (resource, filename, cwd, done) {
   });
 }
 
-module.exports = {getIt:getIt, getCWDName:getCWDName, createManifestText:createManifestText};
+module.exports = { getIt: getIt, getCWDName: getCWDName, createManifestText: createManifestText };
