@@ -7,6 +7,10 @@ var Decrypter = require('./decrypter.js');
 var async = require('async');
 var fileIndex = 1;
 
+var m3u = require('m3u8-reader');
+
+var rimraf = require('rimraf');
+
 var DEFAULT_CONCURRENCY = 5;
 var duplicateFileCount = 0;
 var DEFAULT_TIMEOUT = 180000;
@@ -54,7 +58,7 @@ function getIt(options, done) {
   // Fetch playlist
   fetch.fetchUrl(uri, { timeout: DEFAULT_TIMEOUT }, function getPlaylist(err, meta, body) {
     if (err) {
-      console.error('Error fetching url:', uri);
+      // console.error('Error fetching url:', uri);
       return done(err);
     }
 
@@ -68,6 +72,31 @@ function getIt(options, done) {
     }
     if (!playlistFilename.match(/.+m3u8$/i)) {
       playlistFilename = "playlist" + ".m3u8";
+    }
+
+    // since top level manifest name remains the same on duplicate 
+    // download I can grab the duplicate
+    // directory names from the previously written manifest before the manifest is 
+    // updated
+    var manifestPath = path.resolve(cwd, playlistFilename);
+    // executes only when a top level duplicate manifest exists
+    if (fs.existsSync(manifestPath)) {
+      // parse manifest to grab old directory names, returns array
+      var parsedManifest = m3u(fs.readFileSync(manifestPath, 'utf8'));
+      var index = 0;
+
+      var duplicateSubDir = parsedManifest.filter(function (item) {
+        return typeof (item) === 'string';
+      });
+
+      duplicateSubDir.forEach(function (duplicate) {
+        var subDir = duplicate.substring(0, duplicate.indexOf('/'));
+        console.log(path.resolve(cwd, subDir));
+        var duplicatePath = path.resolve(cwd, subDir);
+        if (duplicatePath != '/' || cwd != duplicatePath) {
+          rimraf(duplicatePath, function () { console.log('done'); });
+        }
+      });
     }
 
     fs.writeFileSync(path.resolve(cwd, playlistFilename), createManifestText(manifest, uri));
@@ -99,7 +128,7 @@ function getIt(options, done) {
           // If subCWD does not exist, make subCWD (mkdirp)
           mkdirp(subDir, function (err) {
             if (err) {
-              console.error('Error creating output path:', subDir);
+              // console.error('Error creating output path:', subDir);
               return done(err);
             }
 
@@ -118,7 +147,7 @@ function getIt(options, done) {
 }
 
 function streamToDisk(resource, filename, cwd, done) {
-  console.log('Streaming', resource.line, 'to disk.');
+  // console.log('Streaming', resource.line, 'to disk.');
   // Fetch it to CWD (streaming)
   var segmentStream = new fetch.FetchStream(resource.line);
   //handle duplicate filenames & remove query parameters
@@ -140,12 +169,12 @@ function streamToDisk(resource, filename, cwd, done) {
   segmentStream.pipe(outputStream);
 
   segmentStream.on('error', function (err) {
-    console.error('Fetching of url:', resource.line);
+    // console.error('Fetching of url:', resource.line);
     return done(err);
   });
 
   segmentStream.on('end', function () {
-    console.log('Finished fetching', resource.line);
+    // console.log('Finished fetching', resource.line);
     return done();
   });
 }
@@ -164,7 +193,7 @@ function fetchAndDecryptedSegment(resource, filename, cwd, done) {
       keyBody.readUInt32BE(12)
     ]);
 
-    console.log('Decrypting', resource.line, 'with key', keyBody, 'and IV', [resource.IV[0], resource.IV[1], resource.IV[2], resource.IV[3]]);
+    // console.log('Decrypting', resource.line, 'with key', keyBody, 'and IV', [resource.IV[0], resource.IV[1], resource.IV[2], resource.IV[3]]);
 
     // Fetch segment data
     fetch.fetchUrl(resource.line, { timeout: DEFAULT_TIMEOUT }, function (err, meta, segmentBody) {
