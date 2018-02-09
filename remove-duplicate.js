@@ -1,16 +1,32 @@
+var fs = require('fs');
+var path = require('path');
+var m3u = require('m3u8-reader');
+var rimraf = require('rimraf');
 
-const fs = require('fs');
+function removeDuplicatedDirectories(cwd, playlistFilename) {
+  // since top level manifest name remains the same on duplicate 
+  // download I can grab the duplicate
+  // directory names from the previously written manifest before the manifest is 
+  // updated
+  var manifestPath = path.resolve(cwd, playlistFilename);
+  // executes only when a top level duplicate manifest exists
+  if (fs.existsSync(manifestPath)) {
+    // parse manifest to grab old directory names, returns array
+    var parsedManifest = m3u(fs.readFileSync(manifestPath, 'utf8'));
+    var index = 0;
 
-// v1
-// check if cwd has contents
-// no contents just return
-// if contents
-// check for duplicate
-// no duplicates just return
-// if duplicates
-// remove duplicates and return 
+    var duplicateSubDir = parsedManifest.filter(function (item) {
+      return typeof (item) === 'string';
+    });
 
+    duplicateSubDir.forEach(function (duplicate) {
+      var subDir = duplicate.substring(0, duplicate.indexOf('/'));
+      var duplicatePath = path.resolve(cwd, subDir);
+      if (duplicatePath != '/' || cwd != duplicatePath) {
+        rimraf(duplicatePath, function () { console.log('removed duplicates'); });
+      }
+    });
+  }
+}
 
-// v2
-// if top level playlist already exists or duplicates then clear sub dir
-
+module.exports = removeDuplicatedDirectories;
