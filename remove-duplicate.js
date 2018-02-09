@@ -22,6 +22,7 @@ function removeDuplicatedDirectories(cwd, playlistFilename) {
     // remove playlist.m3u8 portion to expose only dir name
     var subDir = duplicate.substring(0, duplicate.indexOf('/'));
     var duplicatePath = path.resolve(cwd, subDir);
+    // is the first part of conditional && needed? 
     if (duplicatePath != '/' && cwd != duplicatePath) {
       rimraf(duplicatePath, function () { console.log('removed duplicates'); });
     }
