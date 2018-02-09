@@ -74,7 +74,10 @@ function getIt(options, done) {
     }
 
     // removes the old directories if stream is downloaded multiply times
-    removeDuplicatedDirectories(cwd, playlistFilename);
+    // executes only when a top level duplicate manifest exists
+    if (fs.existsSync(path.resolve(cwd, playlistFilename))) {
+      removeDuplicatedDirectories(cwd, playlistFilename);
+    }
 
     fs.writeFileSync(path.resolve(cwd, playlistFilename), createManifestText(manifest, uri));
 

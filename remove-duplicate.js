@@ -9,24 +9,21 @@ function removeDuplicatedDirectories(cwd, playlistFilename) {
   // directory names from the previously written manifest before the manifest is 
   // updated
   var manifestPath = path.resolve(cwd, playlistFilename);
-  // executes only when a top level duplicate manifest exists
-  if (fs.existsSync(manifestPath)) {
-    // parse manifest to grab old directory names, returns array
-    var parsedManifest = m3u(fs.readFileSync(manifestPath, 'utf8'));
-    var index = 0;
+  // parse manifest to grab old directory names, returns array
+  var parsedManifest = m3u(fs.readFileSync(manifestPath, 'utf8'));
+  var index = 0;
 
-    var duplicateSubDir = parsedManifest.filter(function (item) {
-      return typeof (item) === 'string';
-    });
+  var duplicateSubDir = parsedManifest.filter(function (item) {
+    return typeof (item) === 'string';
+  });
 
-    duplicateSubDir.forEach(function (duplicate) {
-      var subDir = duplicate.substring(0, duplicate.indexOf('/'));
-      var duplicatePath = path.resolve(cwd, subDir);
-      if (duplicatePath != '/' || cwd != duplicatePath) {
-        rimraf(duplicatePath, function () { console.log('removed duplicates'); });
-      }
-    });
-  }
+  duplicateSubDir.forEach(function (duplicate) {
+    var subDir = duplicate.substring(0, duplicate.indexOf('/'));
+    var duplicatePath = path.resolve(cwd, subDir);
+    if (duplicatePath != '/' || cwd != duplicatePath) {
+      rimraf(duplicatePath, function () { console.log('removed duplicates'); });
+    }
+  });
 }
 
 module.exports = removeDuplicatedDirectories;
