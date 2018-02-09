@@ -12,11 +12,14 @@ function removeDuplicatedDirectories(cwd, playlistFilename) {
   // parse manifest to grab old directory names, returns array
   var parsedManifest = m3u(fs.readFileSync(manifestPath, 'utf8'));
 
+  // parsed manifest contains objects and strings, playlist.m3u8 files are stored as 
+  // strings
   var duplicateSubDir = parsedManifest.filter(function (item) {
     return typeof (item) === 'string';
   });
 
   duplicateSubDir.forEach(function (duplicate) {
+    // remove playlist.m3u8 portion to expose only dir name
     var subDir = duplicate.substring(0, duplicate.indexOf('/'));
     var duplicatePath = path.resolve(cwd, subDir);
     if (duplicatePath != '/' && cwd != duplicatePath) {
