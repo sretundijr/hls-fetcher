@@ -3,6 +3,10 @@ var path = require('path');
 var m3u = require('m3u8-reader');
 var rimraf = require('rimraf');
 
+// this code executes when a user downloads the same stream twice
+// prior to this update the second download would update the manifest to point
+// to the new subdir, but the old subdir would remain. this code removes those
+// old subdir's 
 function removeDuplicatedDirectories(cwd, playlistFilename) {
   // since top level manifest name remains the same on duplicate 
   // download I can grab the duplicate
@@ -22,7 +26,7 @@ function removeDuplicatedDirectories(cwd, playlistFilename) {
     // remove playlist.m3u8 portion to expose only dir name
     var subDir = duplicate.substring(0, duplicate.indexOf('/'));
     var duplicatePath = path.resolve(cwd, subDir);
-    // is the first part of conditional && needed? 
+    // is the first part of conditional && needed?
     if (duplicatePath != '/' && cwd != duplicatePath) {
       rimraf(duplicatePath, function () { console.log('removed duplicates'); });
     }
