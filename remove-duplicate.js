@@ -23,12 +23,24 @@ function removeDuplicatedDirectories(cwd, playlistFilename) {
   });
 
   duplicateSubDir.forEach(function (duplicate) {
-    // remove playlist.m3u8 portion to expose only dir name
-    var subDir = duplicate.substring(0, duplicate.indexOf('/'));
-    var duplicatePath = path.resolve(cwd, subDir);
-    // is the first part of conditional && needed?
-    if (duplicatePath != '/' && cwd != duplicatePath) {
-      rimraf(duplicatePath, function () { console.log('removed duplicates'); });
+
+    if (path.extname(duplicate) === '.ts') {
+      console.log(duplicate, 'duplicate ts');
+      fs.unlink(path.resolve(cwd, duplicate), function (err) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log('duplicated download of ts file removed');
+        }
+      })
+    } else {
+      // remove playlist.m3u8 portion to expose only dir name
+      var subDir = duplicate.substring(0, duplicate.indexOf('/'));
+      var duplicatePath = path.resolve(cwd, subDir);
+      // is the first part of conditional && needed?
+      if (duplicatePath != '/' && cwd != duplicatePath) {
+        rimraf(duplicatePath, function () { console.log('removed duplicates'); });
+      }
     }
   });
 }
