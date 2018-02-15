@@ -24,8 +24,14 @@ function removeDuplicatedDirectories(cwd, playlistFilename) {
 
   duplicateSubDir.forEach(function (duplicate) {
 
-    if (path.extname(duplicate) === '.ts') {
-      fs.unlinkSync(path.resolve(cwd, duplicate));
+    if (path.extname(duplicate) === '.ts' && fs.existsSync(path.resolve(cwd, duplicate))) {
+      fs.unlink(path.resolve(cwd, duplicate), function (err) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log('duplicated downloaded files removed');
+        }
+      });
     } else {
       // remove playlist.m3u8 portion to expose only dir name
       var subDir = duplicate.substring(0, duplicate.indexOf('/'));
