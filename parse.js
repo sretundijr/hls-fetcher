@@ -75,7 +75,6 @@ function parseManifest(manifestUri, manifestData) {
 
   // Split into lines
   var lines = manifestData.split('\n');
-  // console.log(lines);
   // determine resources, and store all lines
   for (var i = 0; i < lines.length; i++) {
     var currentLine = lines[i];
@@ -87,11 +86,8 @@ function parseManifest(manifestUri, manifestData) {
     } else if (currentLine.match(/^#EXTINF/) || currentLine.match(/^#EXT-X-STREAM-INF/)) {
       i++;
       if (i < lines.length) {
-        // console.log(currentLine, 'current line');
-        // console.log(lines[i], 'lines');
         if (lines[i].match(/^#EXT-X-BYTERANGE/)) {
           i++;
-          // console.log(lines[i], 'lines + 1');
           manifestLines.push(parseResource(currentLine, lines[i], rootUri, mediaSequence++, encryptionSettings));
         } else {
           manifestLines.push(parseResource(currentLine, lines[i], rootUri, mediaSequence++, encryptionSettings));
@@ -99,7 +95,6 @@ function parseManifest(manifestUri, manifestData) {
       }
     }
   }
-  console.log(manifestLines);
   return manifestLines;
 }
 
