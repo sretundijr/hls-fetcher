@@ -25,7 +25,7 @@ function parseEncryption(tagLine, manifestUri) {
   }
 }
 
-function parseResource (tagLine, resourceLine, manifestUri, mediaSequence, encryptionSettings) {
+function parseResource(tagLine, resourceLine, manifestUri, mediaSequence, encryptionSettings) {
   var resource = {
     type: 'unknown',
     line: resourceLine,
@@ -34,7 +34,7 @@ function parseResource (tagLine, resourceLine, manifestUri, mediaSequence, encry
     IV: 0
   };
 
-  if(tagLine.match(/^#EXTINF/i)) {
+  if (tagLine.match(/^#EXTINF/i)) {
     resource.type = 'segment';
   } else if (tagLine.match(/^#EXT-X-STREAM-INF/i)) {
     resource.type = 'playlist';
@@ -67,7 +67,7 @@ function parseResource (tagLine, resourceLine, manifestUri, mediaSequence, encry
   return resource;
 }
 
-function parseManifest (manifestUri, manifestData) {
+function parseManifest(manifestUri, manifestData) {
   var mediaSequence = 0;
   var manifestLines = [];
   var rootUri = path.dirname(manifestUri);
@@ -75,24 +75,32 @@ function parseManifest (manifestUri, manifestData) {
 
   // Split into lines
   var lines = manifestData.split('\n');
-
+  // console.log(lines);
   // determine resources, and store all lines
-  for(var i = 0; i < lines.length; i++) {
+  for (var i = 0; i < lines.length; i++) {
     var currentLine = lines[i];
-    manifestLines.push({type: 'tag', line: currentLine});
+    manifestLines.push({ type: 'tag', line: currentLine });
     if (currentLine.match(/^#EXT-X-KEY/i)) {
       encryptionSettings = parseEncryption(currentLine, manifestUri);
-    } else if(currentLine.match(/^#EXT-X-MEDIA-SEQUENCE/i)) {
+    } else if (currentLine.match(/^#EXT-X-MEDIA-SEQUENCE/i)) {
       mediaSequence = parseFloat(currentLine.split(':')[1]);
-    } else if(currentLine.match(/^#EXTINF/) || currentLine.match(/^#EXT-X-STREAM-INF/)) {
+    } else if (currentLine.match(/^#EXTINF/) || currentLine.match(/^#EXT-X-STREAM-INF/)) {
       i++;
       if (i < lines.length) {
-        manifestLines.push(parseResource(currentLine, lines[i], rootUri, mediaSequence++, encryptionSettings));
+        // console.log(currentLine, 'current line');
+        // console.log(lines[i], 'lines');
+        if (lines[i].match(/^#EXT-X-BYTERANGE/)) {
+          i++;
+          // console.log(lines[i], 'lines + 1');
+          manifestLines.push(parseResource(currentLine, lines[i], rootUri, mediaSequence++, encryptionSettings));
+        } else {
+          manifestLines.push(parseResource(currentLine, lines[i], rootUri, mediaSequence++, encryptionSettings));
+        }
       }
     }
   }
-
+  console.log(manifestLines);
   return manifestLines;
 }
 
-module.exports = {parseManifest:parseManifest, parseResource:parseResource, parseEncryption:parseEncryption};
+module.exports = { parseManifest: parseManifest, parseResource: parseResource, parseEncryption: parseEncryption };
