@@ -5,8 +5,8 @@ var rimraf = require('rimraf');
 
 // this code executes when a user downloads the same stream twice
 // prior to this update the second download would update the manifest to point
-// to the new subdir, but the old subdir would remain. this code removes those
-// old subdir's 
+// to the new subdir/file.ts, but the old subdir/file.ts would remain. 
+// this code removes those old subdir's or files 
 function removeDuplicatedDirectories(cwd, playlistFilename) {
   // since top level manifest name remains the same on duplicate 
   // download I can grab the duplicate
